@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeView: View {
     
     @AppStorage("onboarding") var isOnboardingViewActive: Bool = false
+    @State private var isAnimating: Bool = false
     
     var body: some View {
         ZStack {
@@ -21,16 +22,28 @@ struct HomeView: View {
                 Spacer()
                 ZStack {
                     ZStack {
-                        Circle()
-                            .stroke(.gray.opacity(0.2), lineWidth: 80)
-                            .frame(width: 260, height: 260, alignment: .center)
-                        Circle()
-                            .stroke(.gray.opacity(0.2), lineWidth: 40)
-                            .frame(width: 260, height: 260, alignment: .center)
+                        ZStack {
+                            Circle()
+                                .stroke(.gray.opacity(0.2), lineWidth: 80)
+                                .frame(width: 260, height: 260, alignment: .center)
+                            Circle()
+                                .stroke(.gray.opacity(0.2), lineWidth: 40)
+                                .frame(width: 260, height: 260, alignment: .center)
+                        }
+                        .blur(radius: self.isAnimating ? 0 : 10)
+                        .opacity(self.isAnimating ? 1 : 0)
+                        .scaleEffect(self.isAnimating ? 1 : 0.5)
+                        .animation(.easeOut(duration: 1), value: self.isAnimating)
                         Image("character-2")
                             .resizable()
                             .scaledToFit()
                             .padding()
+                            .offset(y: self.isAnimating ? 35 : -35)
+                            .animation(
+                                Animation
+                                    .easeInOut(duration: 4)
+                                    .repeatForever() , value: self.isAnimating
+                            )
                     }//:ZStack
                 }//:ZStack
                 
@@ -45,6 +58,7 @@ struct HomeView: View {
                 Spacer()
                 Button {
                     isOnboardingViewActive = true
+                    playSound(sound: "success", type: "m4a")
                 } label: {
                     Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
                         .imageScale(.large)
@@ -57,6 +71,11 @@ struct HomeView: View {
                 .controlSize(.large)
             }//:VStack
         }//:ZStack
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.isAnimating = true 
+            }
+        }
     }
 }
 

@@ -13,6 +13,9 @@ struct OnboardingView: View {
     @State private var buttonWidth: Double = UIScreen.main.bounds.width - 80
     @State private var buttonOffset: CGFloat = 0
     @State private var isAnimating: Bool = false
+    @State private var imageOffset: CGSize = .zero
+    @State private var title: String = "Share."
+    
     
     var body: some View {
         
@@ -23,7 +26,7 @@ struct OnboardingView: View {
                 Spacer()
                 //MARK: - Header
                 VStack(spacing: 0) {
-                    Text("Share")
+                    Text(self.title)
                         .fontWeight(.heavy)
                         .foregroundColor(.white)
                         .font(.system(size: 60))
@@ -44,19 +47,60 @@ struct OnboardingView: View {
                 //MARK: - Center
                 ZStack() {
                     ZStack() {
-                        Circle()
-                            .stroke(.white.opacity(0.2), lineWidth: 40)
-                            .frame(width: 260, height: 260, alignment: .center)
-                        Circle()
-                            .stroke(.white.opacity(0.2), lineWidth: 80)
-                            .frame(width: 260, height: 260, alignment: .center)
+                        ZStack {
+                            ZStack {
+                                Circle()
+                                    .stroke(.white.opacity(0.2), lineWidth: 40)
+                                    .frame(width: 260, height: 260, alignment: .center)
+                                Circle()
+                                    .stroke(.white.opacity(0.2), lineWidth: 80)
+                                    .frame(width: 260, height: 260, alignment: .center)
+                            }
+                            .blur(radius: self.isAnimating ? 0 : 10)
+                            .opacity(self.isAnimating ? 1 : 0)
+                            .scaleEffect(isAnimating ? 1 : 0.5)
+                            .animation(.easeOut(duration: 1), value: self.isAnimating)
+                        }
+                        .offset(x: self.imageOffset.width * -1)
+                        .blur(radius: abs(self.imageOffset.width / 5))
+                        .animation(.easeOut(duration: 1), value: self.imageOffset)
+                        
                         Image("character-1")
                             .resizable()
                             .scaledToFit()
                             .opacity(self.isAnimating ? 1 : 0)
-                            .offset(x: self.isAnimating ? 0 : -20)
+                            .offset(x:  self.imageOffset.width * 1.2, y: 0)
+                            .rotationEffect(.degrees(Double(self.imageOffset.width / 20)))
                             .animation(.easeOut(duration: 1), value: self.isAnimating)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged({ gesture in
+                                        if abs(self.imageOffset.width) <= 150 {
+                                            withAnimation(.linear(duration: 0.25)){
+                                                self.title = "Give."
+                                            }
+                                            self.imageOffset = gesture.translation
+                                        }
+                                    })
+                                
+                                    .onEnded({ _ in
+                                        self.imageOffset = .zero
+                                        withAnimation(.linear(duration: 0.25)){
+                                            self.title = "Share."
+                                        }
+                                    })
+                            )//:gesture
+                            .animation(.easeOut(duration: 0.6), value: self.imageOffset)
                     }//:ZSTACK
+                    .overlay(
+                        Image(systemName: "arrow.left.and.right.circle")
+                            .font(.system(size: 44, weight: .ultraLight))
+                            .foregroundColor(.white)
+                            .offset(y: 20)
+                        , alignment: .bottom
+                    
+                    
+                    )
                 }//:ZSTACK
                 Spacer()
                 
@@ -113,6 +157,7 @@ struct OnboardingView: View {
                                         if buttonOffset > buttonWidth / 2 {
                                             buttonOffset = buttonWidth - 80
                                             isOnBoardingViewActive = false
+                                            playSound(sound: "chimeup", type: "mp3")
                                         } else {
                                             buttonOffset = 0
                                         }
@@ -133,6 +178,7 @@ struct OnboardingView: View {
         .onAppear {
             self.isAnimating = true
         }
+        .preferredColorScheme(.dark)
     }
 }
 
